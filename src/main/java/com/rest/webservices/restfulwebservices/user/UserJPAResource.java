@@ -9,27 +9,31 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 
-//@RestController
-public class UserResource {
+@RestController
+public class UserJPAResource {
     private UserDaoService service;
 
-    public UserResource(UserDaoService service) {
+    private UserRepository repository;
+
+    public UserJPAResource(UserDaoService service, UserRepository repository) {
         this.service = service;
+        this.repository = repository;
     }
 
     @GetMapping("/users")
     public List<User> retrieveAllUsers(){
-        return service.findAll();
+        return repository.findAll();
     }
 
     @GetMapping("/users/{id}")
     public EntityModel<User> retrieveAllUsersById(@PathVariable int id){
-        User user = service.findById(id);
-        if(user == null){
+        Optional<User> user = repository.findById(id);
+        if(user.isEmpty()){
             throw new UserNotFoundException("id: " + id);
         }
-        EntityModel<User> entityModel = EntityModel.of(user);
+        EntityModel<User> entityModel = EntityModel.of(user.get());
 
         WebMvcLinkBuilder link = WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(this.getClass()).retrieveAllUsers());
         entityModel.add(link.withRel("all-users"));
